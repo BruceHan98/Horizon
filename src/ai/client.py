@@ -16,6 +16,15 @@ class AIClient(ABC):
     """Abstract base class for AI clients."""
 
     @abstractmethod
+    async def ping(self) -> bool:
+        """Check if the AI service is accessible.
+
+        Returns:
+            bool: True if service is accessible, False otherwise
+        """
+        pass
+
+    @abstractmethod
     async def complete(
         self,
         system: str,
@@ -57,6 +66,19 @@ class AnthropicClient(AIClient):
         self.client = AsyncAnthropic(**kwargs)
         self.model = config.model
         self.max_tokens = config.max_tokens
+
+    async def ping(self) -> bool:
+        """Check if Anthropic service is accessible."""
+        try:
+            await self.client.messages.create(
+                model=self.model,
+                max_tokens=1,
+                system="Ping",
+                messages=[{"role": "user", "content": "Ping"}]
+            )
+            return True
+        except Exception:
+            return False
 
     async def complete(
         self,
@@ -107,6 +129,18 @@ class OpenAIClient(AIClient):
         self.client = AsyncOpenAI(**kwargs)
         self.model = config.model
         self.max_tokens = config.max_tokens
+
+    async def ping(self) -> bool:
+        """Check if OpenAI service is accessible."""
+        try:
+            await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": "Ping"}],
+                max_tokens=1
+            )
+            return True
+        except Exception:
+            return False
 
     async def complete(
         self,
@@ -161,6 +195,19 @@ class MiniMaxClient(AIClient):
         self.client = AsyncOpenAI(**kwargs)
         self.model = config.model
         self.max_tokens = config.max_tokens
+
+    async def ping(self) -> bool:
+        """Check if MiniMax service is accessible."""
+        try:
+            await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": "Ping"}],
+                max_tokens=1,
+                temperature=0.01
+            )
+            return True
+        except Exception:
+            return False
 
     async def complete(
         self,
@@ -217,6 +264,20 @@ class GeminiClient(AIClient):
         self.model = config.model
         self.temperature = config.temperature
         self.max_tokens = config.max_tokens
+
+    async def ping(self) -> bool:
+        """Check if Gemini service is accessible."""
+        try:
+            await self.client.aio.models.generate_content(
+                model=self.model,
+                contents="Ping",
+                config=types.GenerateContentConfig(
+                    max_output_tokens=1
+                )
+            )
+            return True
+        except Exception:
+            return False
 
     async def complete(
         self,
