@@ -72,11 +72,17 @@ class HorizonOrchestrator:
                     f"→ {len(merged_items)} unique items\n"
                 )
 
-            # 4. Analyze with AI
+            # 4. Test AI connectivity before analysis
+            if not await self.test_ai_connectivity():
+                self.console.print("[yellow]⚠️  Skipping AI analysis due to connectivity failure.[/yellow]")
+                self.console.print("[yellow]⚠️  Skipping filter, summary generation, and deployment.[/yellow]")
+                return
+
+            # 5. Analyze with AI
             analyzed_items = await self._analyze_content(merged_items)
             self.console.print(f"🤖 Analyzed {len(analyzed_items)} items with AI\n")
 
-            # 5. Filter by score threshold
+            # 6. Filter by score threshold
             threshold = self.config.filtering.ai_score_threshold
             important_items = [
                 item for item in analyzed_items
@@ -88,7 +94,7 @@ class HorizonOrchestrator:
                 f"⭐️ {len(important_items)} items scored ≥ {threshold}\n"
             )
 
-            # 5.5 Semantic deduplication: drop items covering the same topic
+            # 6.5 Semantic deduplication: drop items covering the same topic
             deduped_items = self.merge_topic_duplicates(important_items)
             if len(deduped_items) < len(important_items):
                 self.console.print(
@@ -106,10 +112,10 @@ class HorizonOrchestrator:
                 self.console.print(f"      • {source_key}: {count}")
             self.console.print("")
 
-            # 6. Search related stories + enrich with background knowledge (2nd AI pass)
-            await self._enrich_important_items(important_items)
+            # 7. Search related stories + enrich with background knowledge (2nd AI pass)
+            # await self._enrich_important_items(important_items)
 
-            # 7. Generate and save daily summaries for each configured language
+            # 8. Generate and save daily summaries for each configured language
             today = datetime.utcnow().strftime("%Y-%m-%d")
             for lang in self.config.ai.languages:
                 summary = await self._generate_summary(important_items, today, len(all_items), language=lang)
@@ -119,39 +125,39 @@ class HorizonOrchestrator:
                 self.console.print(f"💾 Saved {lang.upper()} summary to: {summary_path}\n")
 
                 # Copy to docs/ for GitHub Pages
-                try:
-                    from pathlib import Path
+                # try:
+                #     from pathlib import Path
 
-                    post_filename = f"{today}-summary-{lang}.md"
-                    posts_dir = Path("docs/_posts")
-                    posts_dir.mkdir(parents=True, exist_ok=True)
+                #     post_filename = f"{today}-summary-{lang}.md"
+                #     posts_dir = Path("docs/_posts")
+                #     posts_dir.mkdir(parents=True, exist_ok=True)
 
-                    dest_path = posts_dir / post_filename
+                #     dest_path = posts_dir / post_filename
 
-                    # Add Jekyll front matter
-                    front_matter = (
-                        "---\n"
-                        "layout: default\n"
-                        f"title: \"Horizon Summary: {today} ({lang.upper()})\"\n"
-                        f"date: {today}\n"
-                        f"lang: {lang}\n"
-                        "---\n\n"
-                    )
+                #     # Add Jekyll front matter
+                #     front_matter = (
+                #         "---\n"
+                #         "layout: default\n"
+                #         f"title: \"Horizon Summary: {today} ({lang.upper()})\"\n"
+                #         f"date: {today}\n"
+                #         f"lang: {lang}\n"
+                #         "---\n\n"
+                #     )
 
-                    # Strip leading H1 header to avoid duplication with Jekyll title
-                    summary_content = summary
-                    first_line = summary_content.strip().split("\n")[0]
-                    if first_line.startswith("# "):
-                        parts = summary_content.split("\n", 1)
-                        if len(parts) > 1:
-                            summary_content = parts[1].strip()
+                #     # Strip leading H1 header to avoid duplication with Jekyll title
+                #     summary_content = summary
+                #     first_line = summary_content.strip().split("\n")[0]
+                #     if first_line.startswith("# "):
+                #         parts = summary_content.split("\n", 1)
+                #         if len(parts) > 1:
+                #             summary_content = parts[1].strip()
 
-                    with open(dest_path, "w", encoding="utf-8") as f:
-                        f.write(front_matter + summary_content)
+                #     with open(dest_path, "w", encoding="utf-8") as f:
+                #         f.write(front_matter + summary_content)
 
-                    self.console.print(f"📄 Copied {lang.upper()} summary to GitHub Pages: {dest_path}\n")
-                except Exception as e:
-                    self.console.print(f"[yellow]⚠️  Failed to copy {lang.upper()} summary to docs/: {e}[/yellow]\n")
+                #     self.console.print(f"📄 Copied {lang.upper()} summary to GitHub Pages: {dest_path}\n")
+                # except Exception as e:
+                #     self.console.print(f"[yellow]⚠️  Failed to copy {lang.upper()} summary to docs/: {e}[/yellow]\n")
 
                 # Send email if configured
                 if self.email_manager and self.config.email and self.config.email.enabled:
@@ -396,6 +402,24 @@ class HorizonOrchestrator:
         enricher = ContentEnricher(ai_client)
         await enricher.enrich_batch(items)
         self.console.print(f"   Enriched {len(items)} items\n")
+
+    async def test_ai_connectivity(self) -> bool:
+        """Test AI service connectivity with retry.
+
+        Returns:
+            bool: True if AI service is accessible, False otherwise
+        """
+        ai_client = create_ai_client(self.config.ai)
+        max_retries = 2
+
+        for attempt in range(max_retries + 1):
+            if await ai_client.ping():
+                return True
+            if attempt < max_retries:
+                self.console.print(f"[yellow]⚠️  AI service not accessible (attempt {attempt + 1}/{max_retries + 1}), retrying...[/yellow]")
+
+        self.console.print("[red]❌ AI service is not accessible after all attempts.[/red]")
+        return False
 
     async def _analyze_content(self, items: List[ContentItem]) -> List[ContentItem]:
         """Analyze content items with AI.
