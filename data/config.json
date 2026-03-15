@@ -23,6 +23,96 @@
         "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
         "enabled": true,
         "category": "github-trending"
+      },
+      {
+        "name": "AI新闻资讯",
+        "url": "https://rss.brucehan.club/aibase/news",
+        "enabled": true,
+        "category": "AI资讯"
+      },
+      {
+        "name": "掘金 人工智能",
+        "url": "https://rss.brucehan.club/juejin/category/ai",
+        "enabled": true,
+        "category": "AI资讯"
+      },
+      {
+        "name": "量子位",
+        "url": "https://www.qbitai.com/feed",
+        "enabled": true,
+        "category": "AI资讯"
+      },
+      {
+        "name": "阮一峰的网络日志",
+        "url": "http://feeds.feedburner.com/ruanyifeng",
+        "enabled": true,
+        "category": "Blog"
+      },
+      {
+        "name": "AI日报",
+        "url": "https://rss.brucehan.club/aibase/daily",
+        "enabled": true,
+        "category": "日报"
+      },
+      {
+        "name": "Readhub - 每日早报",
+        "url": "https://rss.brucehan.club/readhub/daily",
+        "enabled": true,
+        "category": "日报"
+      },
+      {
+        "name": "晚点 - 最新报道",
+        "url": "https://rss.brucehan.club/latepost",
+        "enabled": true,
+        "category": "日报"
+      },
+      {
+        "name": "掘金AI本周最热",
+        "url": "https://rss.brucehan.club/juejin/trending/ai/weekly",
+        "enabled": true,
+        "category": "热榜"
+      },
+      {
+        "name": "Learningenglish-authentic-real-english-BBC",
+        "url": "https://rss.brucehan.club/bbc/learningenglish/authentic-real-english",
+        "enabled": true,
+        "category": "英语"
+      },
+      {
+        "name": "Learningenglish-take-away-english-BBC",
+        "url": "https://rss.brucehan.club/bbc/learningenglish/take-away-english",
+        "enabled": true,
+        "category": "英语"
+      },
+      {
+        "name": "纽约时报中文网 - 中英对照版",
+        "url": "https://rss.brucehan.club/nytimes/dual",
+        "enabled": true,
+        "category": "英语"
+      },
+      {
+        "name": "Ars Technica",
+        "url": "https://arstechnica.com/feed/",
+        "enabled": true,
+        "category": "资讯"
+      },
+      {
+        "name": "InfoQ - AI, ML & Data Engineering",
+        "url": "https://feed.infoq.com/ai-ml-data-eng/",
+        "enabled": true,
+        "category": "资讯"
+      },
+      {
+        "name": "InfoQ 推荐",
+        "url": "https://rss.brucehan.club/infoq/recommend",
+        "enabled": true,
+        "category": "资讯"
+      },
+      {
+        "name": "少数派",
+        "url": "https://rss.brucehan.club/sspai/index",
+        "enabled": true,
+        "category": "资讯"
       }
     ]
   },

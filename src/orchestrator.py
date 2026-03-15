@@ -73,6 +73,13 @@ class HorizonOrchestrator:
                     f"→ {len(merged_items)} unique items\n"
                 )
 
+            # 3.5 Limit items per source_type to prevent excessive processing
+            limited_items = self.limit_items_per_source(merged_items, max_per_source=50)
+            if len(limited_items) < len(merged_items):
+                self.console.print(
+                    f"📊 Limited items per source: {len(merged_items)} → {len(limited_items)} items\n"
+                )
+
             # 4. Test AI connectivity before analysis
             if not await self.test_ai_connectivity():
                 self.console.print("[yellow]⚠️  Skipping AI analysis due to connectivity failure.[/yellow]")
@@ -80,7 +87,7 @@ class HorizonOrchestrator:
                 return
 
             # 5. Analyze with AI
-            analyzed_items = await self._analyze_content(merged_items)
+            analyzed_items = await self._analyze_content(limited_items)
             self.console.print(f"🤖 Analyzed {len(analyzed_items)} items with AI\n")
 
             # 6. Filter by score threshold
@@ -341,6 +348,53 @@ class HorizonOrchestrator:
             merged.append(primary)
 
         return merged
+
+    def limit_items_per_source(
+        self, items: List[ContentItem], max_per_source: int = 50
+    ) -> List[ContentItem]:
+        """Limit the number of items per source_type.
+
+        This prevents any single source from dominating the pipeline when
+        there are too many items.
+
+        Args:
+            items: Items to limit
+            max_per_source: Maximum items per source type (default: 50)
+
+        Returns:
+            List[ContentItem]: Items with count per source limited
+        """
+        if max_per_source <= 0:
+            return items
+
+        # Group by source_type
+        source_groups: Dict[str, List[ContentItem]] = defaultdict(list)
+        for item in items:
+            source_groups[item.source_type.value].append(item)
+
+        # Check if any source exceeds the limit
+        limited = []
+        total_dropped = 0
+        for source_type, source_items in source_groups.items():
+            if len(source_items) > max_per_source:
+                # Sort by published_at (newest first) and take the top max_per_source
+                source_items.sort(key=lambda x: x.published_at, reverse=True)
+                dropped = len(source_items) - max_per_source
+                total_dropped += dropped
+                self.console.print(
+                    f"  📉 {source_type}: {len(source_items)} → {max_per_source} items "
+                    f"(dropped {dropped} oldest)"
+                )
+                limited.extend(source_items[:max_per_source])
+            else:
+                limited.extend(source_items)
+
+        if total_dropped > 0:
+            self.console.print(
+                f"  🗑️  Total dropped: {total_dropped} items from sources exceeding limit\n"
+            )
+
+        return limited
 
     @staticmethod
     def _title_tokens(title: str) -> set:
