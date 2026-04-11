@@ -33,6 +33,7 @@ ENV/
 *.swo
 *~
 CLAUDE.md
+.claude/
 
 # Environment variables
 .env
